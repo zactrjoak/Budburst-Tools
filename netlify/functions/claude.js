@@ -1,12 +1,14 @@
 exports.handler = async function(event, context) {
-  // Only allow POST
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'API key not configured' }) };
+    return { 
+      statusCode: 500, 
+      body: JSON.stringify({ error: 'API key not configured' }) 
+    };
   }
 
   try {
@@ -26,7 +28,12 @@ exports.handler = async function(event, context) {
 
     return {
       statusCode: response.status,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      },
       body: JSON.stringify(data),
     };
   } catch (err) {
