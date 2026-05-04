@@ -142,6 +142,7 @@
 </head>
 <body>
 
+<div id="global-tip" style="display:none;position:fixed;z-index:9999;max-width:260px;background:#07201B;border:1px solid rgba(133,217,109,0.2);border-radius:8px;padding:12px 14px;font-size:11px;color:#AEB1A5;line-height:1.6;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,0.3);"></div>
 <div class="header">
   <div>
     <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--lime);margin-bottom:4px;">Opportunity Qualification</div>
@@ -309,6 +310,31 @@ function setFramework(fw) {
   document.getElementById('gap-output').classList.remove('visible');
 }
 
+const STATUS_TIP_HTML = '<strong style="color:#D4F0CF;display:block;margin-bottom:5px;">Confirmed</strong>Explicitly established and documented. You have a name, a number, a date, or a direct statement from the buyer.<br><br><strong style="color:#D4F0CF;display:block;margin-bottom:5px;">Targeted</strong>Identified but not yet validated. You have a hypothesis or partial picture but haven't confirmed it directly.<br><br><strong style="color:#D4F0CF;display:block;margin-bottom:5px;">Unknown</strong>Not yet explored. You don't have enough information to assess this element.';
+
+function showGlobalTip(e) {
+  const tip = document.getElementById('global-tip');
+  tip.innerHTML = STATUS_TIP_HTML;
+  tip.style.display = 'block';
+  positionGlobalTip(e);
+}
+
+function positionGlobalTip(e) {
+  const tip = document.getElementById('global-tip');
+  const x = e.clientX + 12;
+  const y = e.clientY - 10;
+  const tipW = 260;
+  const tipH = tip.offsetHeight || 160;
+  const winW = window.innerWidth;
+  const winH = window.innerHeight;
+  tip.style.left = (x + tipW > winW ? winW - tipW - 10 : x) + 'px';
+  tip.style.top = (y + tipH > winH ? y - tipH - 10 : y) + 'px';
+}
+
+function hideGlobalTip() {
+  document.getElementById('global-tip').style.display = 'none';
+}
+
 function renderElements() {
   const container = document.getElementById('qual-elements');
   container.innerHTML = frameworks[currentFramework].elements.map(el => `
@@ -323,13 +349,7 @@ function renderElements() {
       <div class="qual-row">
         <div class="field">
           <label class="field-label" style="display:flex;align-items:center;gap:5px;">Status
-            <span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(174,177,165,0.25);font-size:10px;color:#597967;cursor:help;position:relative;flex-shrink:0;" onmouseenter="document.getElementById('status-tip-${el.key}').style.display='block'" onmouseleave="document.getElementById('status-tip-${el.key}').style.display='none'">?
-              <span id="status-tip-${el.key}" style="display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);width:240px;background:#07201B;border:1px solid rgba(133,217,109,0.2);border-radius:8px;padding:10px 12px;font-size:11px;color:#AEB1A5;line-height:1.6;z-index:300;pointer-events:none;font-weight:400;text-transform:none;letter-spacing:0;">
-                <strong style="color:#D4F0CF;display:block;margin-bottom:4px;">Confirmed</strong>Explicitly established and documented. You have a name, a number, a date, or a direct statement from the buyer.<br><br>
-                <strong style="color:#D4F0CF;display:block;margin-bottom:4px;">Targeted</strong>Identified but not yet validated. You have a hypothesis or partial picture but haven't confirmed it directly.<br><br>
-                <strong style="color:#D4F0CF;display:block;margin-bottom:4px;">Unknown</strong>Not yet explored. You don't have enough information to assess this element.
-              </span>
-            </span>
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(174,177,165,0.25);font-size:10px;color:#597967;cursor:help;flex-shrink:0;" onmouseenter="showGlobalTip(event)" onmouseleave="hideGlobalTip()">?</span>
           </label>
           <select class="field-select" id="status-${el.key}" onchange="updateElementStyle('${el.key}')">
             <option value="">Select…</option>
