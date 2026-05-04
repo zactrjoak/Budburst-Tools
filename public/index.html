@@ -322,13 +322,20 @@ function renderElements() {
       </div>
       <div class="qual-row">
         <div class="field">
-          <label class="field-label">Status</label>
+          <label class="field-label" style="display:flex;align-items:center;gap:5px;">Status
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(174,177,165,0.25);font-size:10px;color:#597967;cursor:help;position:relative;flex-shrink:0;" onmouseenter="document.getElementById('status-tip-${el.key}').style.display='block'" onmouseleave="document.getElementById('status-tip-${el.key}').style.display='none'">?
+              <span id="status-tip-${el.key}" style="display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);width:240px;background:#07201B;border:1px solid rgba(133,217,109,0.2);border-radius:8px;padding:10px 12px;font-size:11px;color:#AEB1A5;line-height:1.6;z-index:300;pointer-events:none;font-weight:400;text-transform:none;letter-spacing:0;">
+                <strong style="color:#D4F0CF;display:block;margin-bottom:4px;">Confirmed</strong>Explicitly established and documented. You have a name, a number, a date, or a direct statement from the buyer.<br><br>
+                <strong style="color:#D4F0CF;display:block;margin-bottom:4px;">Targeted</strong>Identified but not yet validated. You have a hypothesis or partial picture but haven't confirmed it directly.<br><br>
+                <strong style="color:#D4F0CF;display:block;margin-bottom:4px;">Unknown</strong>Not yet explored. You don't have enough information to assess this element.
+              </span>
+            </span>
+          </label>
           <select class="field-select" id="status-${el.key}" onchange="updateElementStyle('${el.key}')">
             <option value="">Select…</option>
             <option value="confirmed">Confirmed</option>
             <option value="targeted">Targeted</option>
             <option value="unknown">Unknown</option>
-            <option value="at-risk">At risk</option>
           </select>
         </div>
         <div class="field">
@@ -392,7 +399,7 @@ Respond in 2-3 sentences maximum. Be direct and specific. If the evidence is str
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
