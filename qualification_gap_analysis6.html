@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opportunity Qualification — Gap Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest: #07201B; --pine: #225E4C; --sage: #597967;
+    --lime: #85D96D; --mint: #D4F0CF; --parchment: #EBEBE0;
+    --bark: #33312A; --stone: #AEB1A5; --white: #FAFAF7;
+    --confirmed-color: #225E4C; --confirmed-bg: #D4F0CF;
+    --targeted-color: #185FA5; --targeted-bg: #E6F1FB;
+    --unknown-color: #5F5E5A; --unknown-bg: #F1EFE8;
+    --at-risk-color: #8B2000; --at-risk-bg: #FAECE7;
+    --red-flag: #A32D2D; --red-flag-bg: #FCEBEB;
+    --watch: #8B5000; --watch-bg: #FAEEDA;
+    --quality: #4A1D7A; --quality-bg: #F0EBF8;
+    --radius: 10px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--parchment); color: var(--bark); min-height: 100vh; }
+
+  .header { background: var(--forest); padding: 1.25rem 2rem; display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 3px solid var(--lime); }
+  .header-title { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--white); }
+  .header-title span { color: var(--lime); font-style: italic; }
+  .powered-by { font-size: 10px; color: var(--stone); text-transform: uppercase; letter-spacing: 0.06em; }
+  .powered-by strong { color: var(--lime); }
+  .header-sub { font-size: 12px; color: var(--stone); margin-top: 3px; font-style: italic; }
+
+  .main { max-width: 900px; margin: 0 auto; padding: 1.75rem 1.5rem 3rem; }
+
+  .framework-toggle { display: flex; gap: 4px; background: var(--bark); border-radius: var(--radius); padding: 4px; width: fit-content; margin-bottom: 1.75rem; }
+  .fw-btn { padding: 8px 24px; border-radius: 7px; border: none; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--stone); background: transparent; transition: all 0.15s; }
+  .fw-btn.active { background: var(--pine); color: var(--white); }
+  .fw-label { font-size: 11px; color: var(--stone); margin-bottom: 4px; }
+  .fw-desc { font-size: 12px; color: var(--stone); margin-bottom: 1.5rem; line-height: 1.5; font-style: italic; }
+
+  .section { background: var(--white); border-radius: var(--radius-lg); border: 1px solid rgba(174,177,165,0.25); margin-bottom: 1.25rem; overflow: hidden; }
+  .section-header { background: var(--forest); padding: 10px 16px; }
+  .section-header-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--lime); }
+  .section-body { padding: 1rem 1.25rem; }
+
+  .context-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .context-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+  .field { margin-bottom: 0; }
+  .field-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--stone); margin-bottom: 5px; display: block; }
+  .field-input, .field-select { width: 100%; background: var(--parchment); border: 1px solid rgba(174,177,165,0.4); border-radius: 8px; padding: 8px 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--bark); outline: none; transition: border-color 0.15s; }
+  .field-input:focus, .field-select:focus { border-color: var(--lime); background: var(--white); }
+  .field-textarea { width: 100%; background: var(--parchment); border: 1px solid rgba(174,177,165,0.3); border-radius: 8px; padding: 8px 12px; font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--bark); outline: none; resize: vertical; min-height: 64px; line-height: 1.5; transition: border-color 0.15s; }
+  .field-textarea:focus { border-color: var(--lime); background: var(--white); }
+  .field-textarea::placeholder { color: var(--stone); font-style: italic; }
+
+  .qual-element { border: 1px solid rgba(174,177,165,0.2); border-radius: var(--radius); padding: 1rem; margin-bottom: 0.875rem; background: var(--white); transition: border-color 0.15s; }
+  .qual-element:last-child { margin-bottom: 0; }
+  .qual-element-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+  .qual-letter { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--forest); color: var(--lime); font-size: 14px; font-weight: 700; flex-shrink: 0; font-family: 'DM Serif Display', serif; }
+  .qual-name { font-size: 13px; font-weight: 600; color: var(--bark); }
+  .qual-desc { font-size: 12px; color: var(--stone); margin-top: 2px; line-height: 1.4; }
+  .qual-row { display: grid; grid-template-columns: 160px 1fr; gap: 10px; align-items: start; }
+
+  .status-confirmed { border-color: var(--confirmed-color) !important; }
+  .status-targeted { border-color: var(--targeted-color) !important; }
+  .status-unknown { border-color: rgba(174,177,165,0.4) !important; }
+  .status-at-risk { border-color: var(--at-risk-color) !important; }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 1.5rem; flex-wrap: wrap; align-items: center; }
+  .btn-primary { padding: 10px 24px; background: var(--pine); color: var(--white); border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+  .btn-primary:hover { background: var(--forest); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-secondary { padding: 10px 20px; background: transparent; color: var(--pine); border: 1px solid var(--pine); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .btn-ghost { padding: 10px 20px; background: transparent; color: var(--stone); border: 1px solid rgba(174,177,165,0.4); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; }
+
+  /* LOADING */
+  .loading-bar { display: none; align-items: center; gap: 10px; font-size: 13px; color: var(--pine); }
+  .loading-bar.visible { display: flex; }
+  .spinner { width: 16px; height: 16px; border: 2px solid var(--mint); border-top-color: var(--pine); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* GAP OUTPUT */
+  .gap-output { display: none; margin-top: 2rem; }
+  .gap-output.visible { display: block; }
+  .gap-header { background: var(--forest); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 1rem 1.5rem; border-bottom: 3px solid var(--lime); display: flex; align-items: center; justify-content: space-between; }
+  .gap-header-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--white); }
+  .gap-header-meta { font-size: 12px; color: var(--stone); text-align: right; }
+  .gap-header-meta strong { color: var(--mint); display: block; font-size: 13px; }
+  .gap-body { background: var(--white); border-radius: 0 0 var(--radius-lg) var(--radius-lg); border: 1px solid rgba(174,177,165,0.2); border-top: none; padding: 1.5rem; }
+
+  .health-summary { border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: 14px; }
+  .health-strong { background: var(--confirmed-bg); border: 1px solid var(--confirmed-color); }
+  .health-moderate { background: #FFF8EC; border: 1px solid #D4A020; }
+  .health-weak { background: var(--red-flag-bg); border: 1px solid var(--red-flag); }
+  .health-icon { font-size: 28px; flex-shrink: 0; }
+  .health-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .health-strong .health-label { color: var(--confirmed-color); }
+  .health-moderate .health-label { color: #8B6000; }
+  .health-weak .health-label { color: var(--red-flag); }
+  .health-text { font-size: 13px; line-height: 1.6; color: var(--bark); }
+
+  .gap-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--stone); margin-bottom: 0.75rem; margin-top: 1.25rem; }
+  .gap-section-title:first-of-type { margin-top: 0; }
+
+  .gap-item { border-radius: var(--radius); padding: 0.875rem 1rem; margin-bottom: 0.625rem; display: flex; align-items: flex-start; gap: 12px; }
+  .gap-item:last-child { margin-bottom: 0; }
+  .gap-item-red { background: var(--red-flag-bg); border: 1px solid rgba(163,45,45,0.2); }
+  .gap-item-watch { background: var(--watch-bg); border: 1px solid rgba(139,80,0,0.2); }
+  .gap-item-ok { background: var(--confirmed-bg); border: 1px solid rgba(34,94,76,0.2); }
+  .gap-item-info { background: var(--targeted-bg); border: 1px solid rgba(24,95,165,0.2); }
+  .gap-item-quality { background: var(--quality-bg); border: 1px solid rgba(74,29,122,0.2); }
+
+  .gap-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+  .dot-red { background: var(--red-flag); }
+  .dot-watch { background: var(--watch); }
+  .dot-ok { background: var(--confirmed-color); }
+  .dot-info { background: var(--targeted-color); }
+  .dot-quality { background: var(--quality); }
+
+  .gap-item-title { font-size: 13px; font-weight: 500; color: var(--bark); margin-bottom: 3px; }
+  .gap-item-text { font-size: 12px; color: #555; line-height: 1.6; }
+  .gap-item-ai { font-size: 12px; color: var(--quality); line-height: 1.6; margin-top: 4px; font-style: italic; }
+  .ai-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--quality); margin-bottom: 2px; opacity: 0.8; }
+
+  .status-pill { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .pill-confirmed { background: var(--confirmed-bg); color: var(--confirmed-color); }
+  .pill-targeted { background: var(--targeted-bg); color: var(--targeted-color); }
+  .pill-unknown { background: var(--unknown-bg); color: var(--unknown-color); }
+  .pill-at-risk { background: var(--at-risk-bg); color: var(--at-risk-color); }
+
+  @media print {
+    .header, .health-summary, .gap-item { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .btn-row, .framework-toggle { display: none; }
+    .gap-output { display: block !important; }
+    body { background: white; }
+  }
+  @media (max-width: 600px) {
+    .context-grid, .context-grid-3 { grid-template-columns: 1fr; }
+    .qual-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--lime);margin-bottom:4px;">Opportunity Qualification</div>
+    <div class="header-title">Deal <span>Gap Analysis</span></div>
+  </div>
+  <div style="text-align:right;">
+    <div class="powered-by">Powered by <strong>Budburst</strong></div>
+    <div class="header-sub">Self-assessment tool — workshop use</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <div style="margin-bottom:0.5rem;">
+    <div class="fw-label">Select your qualification framework</div>
+    <div class="framework-toggle">
+      <button class="fw-btn active" onclick="setFramework('meddpicc')">MEDDPICC — Enterprise / Mid-Market</button>
+      <button class="fw-btn" onclick="setFramework('bant')">BANT — SMB</button>
+    </div>
+  </div>
+  <div class="fw-desc" id="fw-desc">MEDDPICC is best suited for complex, multi-stakeholder deals with longer sales cycles where understanding the decision process and internal politics is as important as understanding the need.</div>
+
+  <div class="section">
+    <div class="section-header"><div class="section-header-title">Deal context</div></div>
+    <div class="section-body">
+      <div class="context-grid" style="margin-bottom:1rem;">
+        <div class="field">
+          <label class="field-label">Account / deal name</label>
+          <input type="text" class="field-input" id="deal-name" placeholder="e.g. Acme Corp — Q2 2025" />
+        </div>
+        <div class="field">
+          <label class="field-label">Current stage</label>
+          <select class="field-select" id="deal-stage">
+            <option value="">Select stage…</option>
+            <option value="engaged">Engaged</option>
+            <option value="discovery">Discovery</option>
+            <option value="demo">Demo</option>
+            <option value="proposal">Proposal / Business Case</option>
+            <option value="negotiation">Negotiation</option>
+          </select>
+        </div>
+      </div>
+      <div class="context-grid-3">
+        <div class="field">
+          <label class="field-label">Target close date</label>
+          <input type="date" class="field-input" id="deal-close" />
+        </div>
+        <div class="field">
+          <label class="field-label">Estimated ACV ($)</label>
+          <input type="number" class="field-input" id="deal-acv" placeholder="e.g. 24000" />
+        </div>
+        <div class="field">
+          <label class="field-label">Days in current stage</label>
+          <input type="number" class="field-input" id="deal-days" placeholder="e.g. 14" />
+        </div>
+        <div class="field">
+          <label class="field-label">Deal source</label>
+          <select class="field-select" id="deal-source">
+            <option value="">Select…</option>
+            <option value="outbound">Outbound</option>
+            <option value="inbound">Inbound</option>
+            <option value="referral">Referral</option>
+            <option value="partner">Partner</option>
+          </select>
+        </div>
+        <div class="field" style="grid-column:span 2;">
+          <label class="field-label">Any additional context about this deal</label>
+          <input type="text" class="field-input" id="deal-context" placeholder="e.g. competitive deal, renewal risk, new logo, expansion…" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><div class="section-header-title" id="qual-section-title">Qualification — MEDDPICC</div></div>
+    <div class="section-body" id="qual-elements"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-primary" id="generate-btn" onclick="generateGapAnalysis()">Generate gap analysis</button>
+    <button class="btn-secondary" onclick="loadExample()">Load example deal</button>
+    <button class="btn-ghost" onclick="clearAll()">Clear all</button>
+    <div class="loading-bar" id="loading-bar">
+      <div class="spinner"></div>
+      <span id="loading-text">Analysing qualification evidence…</span>
+    </div>
+  </div>
+
+  <div class="gap-output" id="gap-output">
+    <div class="gap-header">
+      <div class="gap-header-title">Gap Analysis</div>
+      <div class="gap-header-meta">
+        <strong id="out-deal-name">—</strong>
+        <span id="out-deal-meta">—</span>
+      </div>
+    </div>
+    <div class="gap-body" id="gap-body"></div>
+    <div style="margin-top:1rem;">
+      <button class="btn-secondary" onclick="window.print()">Print / save as PDF</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const frameworks = {
+  meddpicc: {
+    label: 'MEDDPICC',
+    desc: 'MEDDPICC is best suited for complex, multi-stakeholder deals with longer sales cycles where understanding the decision process and internal politics is as important as understanding the need.',
+    elements: [
+      { key: 'metrics', letter: 'M', name: 'Metrics', desc: 'The quantified business impact — specific numbers that make the cost of inaction concrete and justify the investment.' },
+      { key: 'economic_buyer', letter: 'E', name: 'Economic Buyer', desc: 'The person with final budget authority. Not just someone involved in the decision — the person who can say yes when everyone else says no.' },
+      { key: 'decision_criteria', letter: 'D', name: 'Decision Criteria', desc: 'The explicit standards the buying team will use to evaluate and select a solution. Formal and informal.' },
+      { key: 'decision_process', letter: 'D', name: 'Decision Process', desc: 'The steps, stakeholders, and timeline involved in making the final decision. Who is involved, in what order, and what happens at each step.' },
+      { key: 'paper_process', letter: 'P', name: 'Paper Process', desc: 'The legal, procurement, and contracting steps required to get a signed agreement. Separate from the decision process — often where deals stall late.' },
+      { key: 'identify_pain', letter: 'I', name: 'Identify Pain', desc: 'The specific, quantified pain that creates urgency to act. Connected to a compelling event that makes solving it time-sensitive.' },
+      { key: 'champion', letter: 'C', name: 'Champion', desc: 'The internal advocate who has the influence, motivation, and willingness to sell on your behalf when you are not in the room.' },
+      { key: 'competition', letter: 'C', name: 'Competition', desc: 'Who else is being evaluated — including the status quo and the option to do nothing. Who is your competitor\'s champion inside the account?' },
+    ]
+  },
+  bant: {
+    label: 'BANT',
+    desc: 'BANT is best suited for shorter-cycle, lower-complexity SMB deals where the key qualification question is whether the buyer has the means, authority, need, and urgency to move quickly.',
+    elements: [
+      { key: 'budget', letter: 'B', name: 'Budget', desc: 'Does the prospect have budget allocated or the ability to allocate budget? Is the investment proportionate to the problem they have described?' },
+      { key: 'authority', letter: 'A', name: 'Authority', desc: 'Is the person you are talking to the decision maker, or do they have meaningful influence? Who else needs to be involved?' },
+      { key: 'need', letter: 'N', name: 'Need', desc: 'Is there a genuine, articulated business problem that your solution addresses? Has the prospect connected the problem to a real cost or risk?' },
+      { key: 'timeline', letter: 'T', name: 'Timeline', desc: 'Is there a specific reason the prospect needs to solve this by a particular date? Is the timeline driven by a real event or by politeness?' },
+    ]
+  }
+};
+
+// What the AI should look for per element
+const qualityGuidance = {
+  metrics: 'Look for: specific numbers, dollar amounts, time measurements, frequency counts, or percentage figures. Vague language like "a lot", "significant", "frequent", or "some inefficiency" without quantification should be flagged. Also flag if there is no connection between the metric and a business cost or consequence.',
+  economic_buyer: 'Look for: a named individual (first and last name or at least a named role held by a specific person), their title, and evidence of their budget authority. Flag if only a role is mentioned without a name, or if it\'s unclear whether this person can actually approve the spend.',
+  decision_criteria: 'Look for: specific evaluation criteria the buying team has stated — features, capabilities, integration requirements, price thresholds, implementation timelines. Flag vague references like "they want something easy to use" or "price is important" without specifics.',
+  decision_process: 'Look for: named steps, named stakeholders involved at each step, and a timeline with actual dates or timeframes. Flag if the process is described in general terms without names, steps, or dates.',
+  paper_process: 'Look for: specific procurement steps, legal review requirements, named teams or individuals involved, and realistic timeline expectations. Flag if procurement is mentioned without any specifics about what it involves.',
+  identify_pain: 'Look for: quantified business impact (dollars, hours, headcount, risk incidents), a compelling event with a specific date or deadline, and a clear connection between the pain and urgency to act now. Flag if pain is described qualitatively without quantification, or if there is no compelling event.',
+  champion: 'Look for: a named individual, evidence of actions they have already taken (not just intentions), confirmation of their internal influence, and evidence of personal motivation. Flag if champion status is claimed based only on enthusiasm or positive sentiment, with no evidence of advocacy, action taken, or personal stake.',
+  competition: 'Look for: named competitors or specific alternatives being evaluated, including the status quo. Ideally also names an internal advocate for the competitor. Flag vague references like "they might be looking at others" or only naming the incumbent without renewal timing.',
+  budget: 'Look for: a specific budget amount, a confirmed budget range, or explicit confirmation that budget has been allocated or can be approved. Flag if budget is described as "probably fine" or "they seem willing to pay" without any number or process confirmation.',
+  authority: 'Look for: a named decision maker or clear evidence that the contact has approval authority. Flag if authority is inferred from seniority alone, or if there are unnamed additional approvers mentioned without clarity on their role.',
+  need: 'Look for: a specific business problem with quantified impact. Flag if need is described in general terms without numbers, or if the connection between the problem and a real business cost is missing.',
+  timeline: 'Look for: a specific date, deadline, or compelling event that creates genuine urgency. Flag approximate timeframes like "a few months" or "end of year" without a specific anchor. Flag if timeline appears to be salesperson-driven rather than buyer-driven.',
+};
+
+const stageWeights = {
+  engaged:     { metrics:1, economic_buyer:1, decision_criteria:1, decision_process:1, paper_process:0, identify_pain:2, champion:1, competition:1, budget:1, authority:1, need:2, timeline:1 },
+  discovery:   { metrics:2, economic_buyer:2, decision_criteria:2, decision_process:2, paper_process:0, identify_pain:3, champion:2, competition:2, budget:2, authority:2, need:3, timeline:2 },
+  demo:        { metrics:2, economic_buyer:2, decision_criteria:3, decision_process:2, paper_process:1, identify_pain:3, champion:3, competition:2, budget:2, authority:3, need:3, timeline:2 },
+  proposal:    { metrics:3, economic_buyer:3, decision_criteria:3, decision_process:3, paper_process:2, identify_pain:3, champion:3, competition:3, budget:3, authority:3, need:3, timeline:3 },
+  negotiation: { metrics:3, economic_buyer:3, decision_criteria:3, decision_process:3, paper_process:3, identify_pain:3, champion:3, competition:3, budget:3, authority:3, need:3, timeline:3 },
+};
+
+let currentFramework = 'meddpicc';
+
+function setFramework(fw) {
+  currentFramework = fw;
+  document.querySelectorAll('.fw-btn').forEach((b,i) => b.classList.toggle('active', ['meddpicc','bant'][i]===fw));
+  document.getElementById('fw-desc').textContent = frameworks[fw].desc;
+  document.getElementById('qual-section-title').textContent = `Qualification — ${frameworks[fw].label}`;
+  renderElements();
+  document.getElementById('gap-output').classList.remove('visible');
+}
+
+function renderElements() {
+  const container = document.getElementById('qual-elements');
+  container.innerHTML = frameworks[currentFramework].elements.map(el => `
+    <div class="qual-element" id="el-${el.key}">
+      <div class="qual-element-header">
+        <div class="qual-letter">${el.letter}</div>
+        <div class="qual-info">
+          <div class="qual-name">${el.name}</div>
+          <div class="qual-desc">${el.desc}</div>
+        </div>
+      </div>
+      <div class="qual-row">
+        <div class="field">
+          <label class="field-label">Status</label>
+          <select class="field-select" id="status-${el.key}" onchange="updateElementStyle('${el.key}')">
+            <option value="">Select…</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="targeted">Targeted</option>
+            <option value="unknown">Unknown</option>
+            <option value="at-risk">At risk</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">What do you know? Be specific.</label>
+          <textarea class="field-textarea" id="notes-${el.key}" placeholder="Add context here…"></textarea>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateElementStyle(key) {
+  const el = document.getElementById(`el-${key}`);
+  const status = document.getElementById(`status-${key}`).value;
+  el.className = 'qual-element';
+  if (status) el.classList.add(`status-${status}`);
+}
+
+function getValues() {
+  const fw = frameworks[currentFramework];
+  const elements = {};
+  fw.elements.forEach(el => {
+    elements[el.key] = {
+      name: el.name,
+      letter: el.letter,
+      status: document.getElementById(`status-${el.key}`)?.value || '',
+      notes: document.getElementById(`notes-${el.key}`)?.value || '',
+    };
+  });
+  return {
+    dealName: document.getElementById('deal-name').value,
+    stage: document.getElementById('deal-stage').value,
+    closeDate: document.getElementById('deal-close').value,
+    acv: document.getElementById('deal-acv').value,
+    days: document.getElementById('deal-days').value,
+    source: document.getElementById('deal-source').value,
+    context: document.getElementById('deal-context').value,
+    elements,
+    framework: currentFramework,
+  };
+}
+
+async function analyzeQualityWithAI(elementKey, elementName, status, notes, dealContext) {
+  if (!notes || notes.trim().length < 10) return null;
+
+  const guidance = qualityGuidance[elementKey] || '';
+  const prompt = `You are reviewing qualification evidence for a B2B sales deal. A sales rep has marked "${elementName}" as "${status}".
+
+Their supporting commentary: "${notes}"
+
+Deal context: ${dealContext || 'Not provided'}
+
+Qualification standard for this element: ${guidance}
+
+Assess whether the commentary provides sufficient evidence to support the claimed status of "${status}". 
+
+Respond in 2-3 sentences maximum. Be direct and specific. If the evidence is strong, say so briefly. If it is weak or missing specifics, identify exactly what is vague or missing. Do not use bullet points. Do not start with "The commentary" or "This commentary". Write as if you are a senior sales manager giving direct, honest feedback.`;
+
+  try {
+    const response = await fetch('/.netlify/functions/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || '';
+    return text.trim();
+  } catch (e) {
+    return null;
+  }
+}
+
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  return Math.round((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
+}
+
+function statusPill(status) {
+  if (!status) return '<span class="status-pill pill-unknown">Unknown</span>';
+  const map = { confirmed: 'pill-confirmed', targeted: 'pill-targeted', unknown: 'pill-unknown', 'at-risk': 'pill-at-risk' };
+  const label = { confirmed: 'Confirmed', targeted: 'Targeted', unknown: 'Unknown', 'at-risk': 'At risk' };
+  return `<span class="status-pill ${map[status]}">${label[status] || status}</span>`;
+}
+
+function stageLabel(s) {
+  return { engaged:'Engaged', discovery:'Discovery', demo:'Demo', proposal:'Proposal / Business Case', negotiation:'Negotiation' }[s] || s;
+}
+
+function stageGapReason(key, stage, status) {
+  if (status === 'at-risk') return `This element was established but is now at risk. Understand what changed and address it before advancing.`;
+  const reasons = {
+    metrics: { discovery:'Quantified business impact should be established in discovery. Without metrics, the deal lacks the internal justification needed to advance.', demo:'Metrics should be confirmed before demo. A demo without a quantified problem is a product tour.', proposal:'A proposal without confirmed metrics has no anchor. The buyer cannot build an internal business case without numbers.', negotiation:'Metrics should have been confirmed stages ago. Their absence at negotiation is a serious risk to close.' },
+    economic_buyer: { discovery:'Identifying the economic buyer early avoids wasted time with contacts who cannot approve the deal.', demo:'By demo stage, the economic buyer should be identified. Without access, the deal cannot advance to proposal.', proposal:'A proposal sent without direct economic buyer engagement will stall.', negotiation:'Without direct economic buyer engagement at negotiation, there is no deal to negotiate.' },
+    decision_criteria: { demo:'Understanding evaluation criteria should inform what you show in the demo.', proposal:'Your proposal should map directly to the buyer\'s stated decision criteria.', negotiation:'Decision criteria should have been confirmed well before negotiation.' },
+    decision_process: { demo:'By demo stage, the decision process should be mapped. Unknown process means unknown timeline and unknown stakeholders.', proposal:'A proposal without a clear view of the decision process has no path to close.', negotiation:'The decision process must be fully mapped at negotiation.' },
+    paper_process: { proposal:'Procurement and legal timelines need to be scoped at proposal stage. Paper process surprises are one of the most common reasons deals miss close dates.', negotiation:'Paper process must be fully understood at negotiation.' },
+    identify_pain: { engaged:'Pain should surface in initial conversation. Without it, there is no basis for continuing.', discovery:'Quantified pain is the foundation of everything that follows.', demo:'Pain should be confirmed before demo. A demo not anchored to specific pain is a product tour.', proposal:'A proposal without confirmed, quantified pain has no urgency.', negotiation:'Pain should have been confirmed and quantified long before negotiation.' },
+    champion: { discovery:'A champion should be identified during discovery. Without one, you have no internal advocate.', demo:'By demo stage, a champion should be identified and tested.', proposal:'A proposal without a champion is a document that will sit in someone\'s inbox.', negotiation:'Without a confirmed champion at negotiation, there is no one pushing this deal to close.' },
+    competition: { demo:'Competitive positioning should be understood by demo stage.', proposal:'Unknown competition at proposal stage means unknown risk.', negotiation:'Competitive status must be clear at negotiation.' },
+    budget: { discovery:'Budget should be explored in discovery.', demo:'Budget should be understood before investing in a demo.', proposal:'A proposal without budget confirmation risks a stall.', negotiation:'Budget must be confirmed at negotiation.' },
+    authority: { discovery:'Decision authority should be established in discovery.', demo:'The decision maker or a strong influencer should be engaged by demo stage.', proposal:'Without authority confirmed, your proposal may never reach the person who can approve it.', negotiation:'Negotiating without confirmed decision authority is a risk.' },
+    need: { engaged:'Need should surface in initial conversation.', discovery:'Need must be fully established in discovery.', demo:'Need should be confirmed before demo.', proposal:'A proposal without confirmed need has no foundation.' },
+    timeline: { demo:'Timeline should be explored by demo stage. Without a compelling event, deals drift.', proposal:'A proposal without a confirmed timeline has no urgency.', negotiation:'Timeline must be confirmed at negotiation.' },
+  };
+  const r = reasons[key];
+  if (!r) return 'Address this element before advancing to the next stage.';
+  return r[stage] || r[Object.keys(r)[Object.keys(r).length-1]] || 'Address this element before advancing.';
+}
+
+async function generateGapAnalysis() {
+  const v = getValues();
+  const stage = v.stage || 'engaged';
+  const weights = stageWeights[stage] || stageWeights.engaged;
+  const daysLeft = daysUntil(v.closeDate);
+  const fw = frameworks[v.framework];
+
+  // Show loading
+  const btn = document.getElementById('generate-btn');
+  const loader = document.getElementById('loading-bar');
+  btn.disabled = true;
+  loader.classList.add('visible');
+
+  // Run AI quality checks in parallel for confirmed/targeted elements with notes
+  const elementsToCheck = fw.elements.filter(el => {
+    const s = v.elements[el.key].status;
+    const n = v.elements[el.key].notes;
+    return (s === 'confirmed' || s === 'targeted') && n && n.trim().length >= 10;
+  });
+
+  document.getElementById('loading-text').textContent = `Analysing ${elementsToCheck.length} qualification entr${elementsToCheck.length===1?'y':'ies'}…`;
+
+  const aiResults = {};
+  await Promise.all(elementsToCheck.map(async el => {
+    const s = v.elements[el.key].status;
+    const n = v.elements[el.key].notes;
+    const dealCtx = `Stage: ${stageLabel(stage)}. ACV: ${v.acv ? '$'+Number(v.acv).toLocaleString() : 'unknown'}. ${v.context || ''}`;
+    const result = await analyzeQualityWithAI(el.key, el.name, s, n, dealCtx);
+    if (result) aiResults[el.key] = result;
+  }));
+
+  btn.disabled = false;
+  loader.classList.remove('visible');
+
+  // Categorise elements
+  const redFlags = [], watchItems = [], goodItems = [], inProgressItems = [];
+  fw.elements.forEach(el => {
+    const s = v.elements[el.key].status;
+    const w = weights[el.key] || 1;
+    const notes = v.elements[el.key].notes;
+    const aiNote = aiResults[el.key] || null;
+    const item = { key: el.key, name: el.name, status: s, notes, weight: w, aiNote };
+    if (s === 'at-risk') redFlags.push(item);
+    else if ((s === '' || s === 'unknown') && w === 3) redFlags.push(item);
+    else if ((s === '' || s === 'unknown') && w <= 2) watchItems.push(item);
+    else if (s === 'targeted') inProgressItems.push(item);
+    else if (s === 'confirmed') goodItems.push(item);
+  });
+
+  // Close date urgency
+  let closeDateNote = '';
+  if (daysLeft !== null) {
+    if (daysLeft < 0) closeDateNote = gapItem('red', `Close date has passed`, `Your target close date was ${Math.abs(daysLeft)} days ago. If this deal is still active, update the close date to reflect reality.`);
+    else if (daysLeft <= 14 && redFlags.length > 0) closeDateNote = gapItem('red', `Close date in ${daysLeft} days with unresolved critical gaps`, `You have ${redFlags.length} critical gap${redFlags.length>1?'s':''} with ${daysLeft} days to close. These must be resolved or the close date needs to move.`);
+    else if (daysLeft <= 30 && redFlags.length > 0) closeDateNote = gapItem('watch', `Close date in ${daysLeft} days`, `${redFlags.length} critical gap${redFlags.length>1?'s':''} remain with 30 days to close. Time to resolve these is shortening.`);
+  }
+
+  // Aging
+  let agingNote = '';
+  const ceilings = { engaged:14, discovery:21, demo:14, proposal:21, negotiation:14 };
+  if (v.days && parseInt(v.days) > (ceilings[stage]||14)) agingNote = gapItem('watch', `Deal has been in ${stageLabel(stage)} for ${v.days} days`, `Deals typically move through this stage in ${ceilings[stage]} days or fewer. Aging without advancement suggests a gap is stalling progress or the stage needs updating.`);
+
+  // Health score
+  const totalWeight = fw.elements.reduce((s,el) => s + (weights[el.key]||1), 0);
+  const confirmedW = goodItems.reduce((s,i) => s + i.weight, 0);
+  const targetedW = inProgressItems.reduce((s,i) => s + i.weight * 0.5, 0);
+  const healthPct = Math.round((confirmedW + targetedW) / totalWeight * 100);
+
+  let healthClass, healthIcon, healthLabel, healthText;
+  if (redFlags.length === 0 && healthPct >= 70) {
+    healthClass='health-strong'; healthIcon='✓'; healthLabel='Qualification looks solid';
+    healthText=`${goodItems.length} element${goodItems.length!==1?'s':''} confirmed, ${inProgressItems.length} in progress. No critical gaps at the ${stageLabel(stage)} stage. Review the quality observations below to strengthen your evidence.`;
+  } else if (redFlags.length <= 1 && healthPct >= 45) {
+    healthClass='health-moderate'; healthIcon='◐'; healthLabel='Qualification is developing — gaps require attention';
+    healthText=`${goodItems.length} element${goodItems.length!==1?'s':''} confirmed. ${redFlags.length>0?`${redFlags.length} critical gap needs resolution before this deal advances.`:`${watchItems.length} item${watchItems.length!==1?'s':''} to address.`}`;
+  } else {
+    healthClass='health-weak'; healthIcon='⚠'; healthLabel='Significant qualification gaps — deal is at risk';
+    healthText=`${redFlags.length} critical gap${redFlags.length!==1?'s':''} at the ${stageLabel(stage)} stage. This deal should not advance until these are resolved.`;
+  }
+
+  let html = `<div class="health-summary ${healthClass}"><div class="health-icon">${healthIcon}</div><div><div class="health-label">${healthLabel}</div><div class="health-text">${healthText}</div></div></div>`;
+
+  if (closeDateNote || agingNote) html += `<div class="gap-section-title">Deal timing</div>${closeDateNote}${agingNote}`;
+
+  if (redFlags.length > 0) {
+    html += `<div class="gap-section-title">Critical gaps — must resolve at ${stageLabel(stage)} stage</div>`;
+    redFlags.forEach(item => {
+      html += gapItemWithAI('red', item.name, statusPill(item.status), stageGapReason(item.key, stage, item.status), item.notes, item.aiNote);
+    });
+  }
+
+  if (watchItems.length > 0) {
+    html += `<div class="gap-section-title">Watch items — address before next stage</div>`;
+    watchItems.forEach(item => {
+      html += gapItemWithAI('watch', item.name, statusPill(item.status), stageGapReason(item.key, stage, item.status), item.notes, item.aiNote);
+    });
+  }
+
+  // Quality concerns — confirmed/targeted items where AI flagged issues
+  const qualityConcerns = [...goodItems, ...inProgressItems].filter(i => i.aiNote && isQualityConcern(i.aiNote));
+  if (qualityConcerns.length > 0) {
+    html += `<div class="gap-section-title">Evidence quality — stated status may be overstated</div>`;
+    qualityConcerns.forEach(item => {
+      html += `<div class="gap-item gap-item-quality"><div class="gap-dot dot-quality"></div><div class="gap-item-content"><div class="gap-item-title">${item.name} ${statusPill(item.status)}</div>${item.notes ? `<div class="gap-item-text" style="margin-bottom:6px;"><em>"${item.notes}"</em></div>` : ''}<div class="ai-label">AI quality check</div><div class="gap-item-ai">${item.aiNote}</div></div></div>`;
+    });
+  }
+
+  // Strong confirmed items
+  const strongItems = [...goodItems, ...inProgressItems].filter(i => !qualityConcerns.includes(i));
+  if (strongItems.length > 0) {
+    html += `<div class="gap-section-title">Well-evidenced</div>`;
+    strongItems.forEach(item => {
+      html += `<div class="gap-item gap-item-ok"><div class="gap-dot dot-ok"></div><div class="gap-item-content"><div class="gap-item-title">${item.name} ${statusPill(item.status)}</div>${item.notes ? `<div class="gap-item-text"><em>"${item.notes}"</em></div>` : ''}${item.aiNote ? `<div class="ai-label" style="margin-top:6px;">AI quality check</div><div class="gap-item-ai" style="color:var(--confirmed-color)">${item.aiNote}</div>` : ''}</div></div>`;
+    });
+  }
+
+  document.getElementById('out-deal-name').textContent = v.dealName || 'Unnamed deal';
+  const parts = [v.stage ? stageLabel(v.stage) : null, v.acv ? `$${Number(v.acv).toLocaleString()} ACV` : null, v.closeDate ? `Close ${new Date(v.closeDate).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}` : null].filter(Boolean);
+  document.getElementById('out-deal-meta').textContent = parts.join(' · ');
+  document.getElementById('gap-body').innerHTML = html;
+  document.getElementById('gap-output').classList.add('visible');
+  document.getElementById('gap-output').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function isQualityConcern(aiText) {
+  if (!aiText) return false;
+  const lc = aiText.toLowerCase();
+  const flags = ['vague','missing','unclear','no specific','without','lacks','not specified','approximate','imprecise','doesn\'t','does not','no named','no number','no date','no mention','insufficient','weak','thin','generic','too broad','overstated','not enough'];
+  return flags.some(f => lc.includes(f));
+}
+
+function gapItem(type, title, text) {
+  const dots = { red: 'dot-red', watch: 'dot-watch', ok: 'dot-ok', info: 'dot-info' };
+  const classes = { red: 'gap-item-red', watch: 'gap-item-watch', ok: 'gap-item-ok', info: 'gap-item-info' };
+  return `<div class="gap-item ${classes[type]}"><div class="gap-dot ${dots[type]}"></div><div class="gap-item-content"><div class="gap-item-title">${title}</div><div class="gap-item-text">${text}</div></div></div>`;
+}
+
+function gapItemWithAI(type, name, pill, reason, notes, aiNote) {
+  const dots = { red:'dot-red', watch:'dot-watch' };
+  const classes = { red:'gap-item-red', watch:'gap-item-watch' };
+  return `<div class="gap-item ${classes[type]}"><div class="gap-dot ${dots[type]}"></div><div class="gap-item-content"><div class="gap-item-title">${name} ${pill}</div><div class="gap-item-text">${reason}</div>${notes?`<div class="gap-item-text" style="margin-top:4px;"><em>"${notes}"</em></div>`:''}${aiNote?`<div class="ai-label" style="margin-top:6px;">AI quality check</div><div class="gap-item-ai">${aiNote}</div>`:''}</div></div>`;
+}
+
+function clearAll() {
+  document.getElementById('deal-name').value = '';
+  document.getElementById('deal-stage').value = '';
+  document.getElementById('deal-close').value = '';
+  document.getElementById('deal-acv').value = '';
+  document.getElementById('deal-days').value = '';
+  document.getElementById('deal-source').value = '';
+  document.getElementById('deal-context').value = '';
+  renderElements();
+  document.getElementById('gap-output').classList.remove('visible');
+}
+
+function loadExample() {
+  setFramework('meddpicc');
+  document.getElementById('deal-name').value = 'Brex — Series B Expansion';
+  document.getElementById('deal-stage').value = 'demo';
+  const d = new Date(); d.setDate(d.getDate() + 38);
+  document.getElementById('deal-close').value = d.toISOString().split('T')[0];
+  document.getElementById('deal-acv').value = '28000';
+  document.getElementById('deal-days').value = '11';
+  document.getElementById('deal-source').value = 'outbound';
+  document.getElementById('deal-context').value = 'Competitive — also evaluating Zenefits. Series B just closed, hiring push starting next month.';
+  const data = {
+    metrics: { status:'confirmed', notes:'$5,000/month in idle salary cost from provisioning delays. 2-3 hours per hire in manual coordination. 15 hires this quarter scaling to 20+ next quarter.' },
+    economic_buyer: { status:'targeted', notes:'CFO identified — Marcus Williams. Not yet engaged directly. Sarah Chen believes he will be required to sign off above $25k.' },
+    decision_criteria: { status:'targeted', notes:'Informally: ease of implementation, IT provisioning capability, payroll accuracy. Formal evaluation criteria not yet documented.' },
+    decision_process: { status:'unknown', notes:'' },
+    paper_process: { status:'unknown', notes:'' },
+    identify_pain: { status:'confirmed', notes:'Manual onboarding cascade across 5+ systems. Engineer couldn\'t push code for 3 days last month due to GitHub access not provisioned. Board presentation in 6 weeks — Sarah needs a solution to present.' },
+    champion: { status:'confirmed', notes:'Sarah Chen, VP People. Has a board presentation in 6 weeks that depends on solving this. Has agreed to connect us with the CTO for the IT provisioning conversation.' },
+    competition: { status:'targeted', notes:'Zenefits confirmed as competitor. Unknown who their internal advocate is. Gusto currently in use — renewal coming up in ~8 months.' },
+  };
+  frameworks['meddpicc'].elements.forEach(el => {
+    const s = document.getElementById(`status-${el.key}`);
+    const n = document.getElementById(`notes-${el.key}`);
+    if (s && data[el.key]) { s.value = data[el.key].status; updateElementStyle(el.key); }
+    if (n && data[el.key]) n.value = data[el.key].notes;
+  });
+}
+
+renderElements();
+</script>
+</body>
+</html>
